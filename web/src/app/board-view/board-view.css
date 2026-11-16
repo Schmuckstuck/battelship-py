@@ -1,0 +1,98 @@
+:host {
+  display: block;
+}
+
+.board-card {
+  padding: 14px;
+  border: 1px solid #22304a;
+  border-radius: 14px;
+  background: #0d1524;
+}
+
+header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+h3 {
+  margin: 0;
+  font-size: 15px;
+  color: #e2e8f0;
+}
+
+header span {
+  font-size: 12px;
+  color: #7c8da8;
+  white-space: nowrap;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: 18px repeat(10, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.coord {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #5b6b85;
+}
+
+.cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #1d2a40;
+  border-radius: 4px;
+  background: #142033;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.cell.ship {
+  border-color: #2f5fd0;
+  background: #1e3a8a;
+}
+
+.cell.miss {
+  background: #0f172a;
+}
+
+.cell.hit {
+  border-color: #f59e0b;
+  background: #b45309;
+}
+
+.cell.sunk {
+  border-color: #ef4444;
+  background: #7f1d1d;
+}
+
+.cell.water {
+  border-style: dashed;
+  border-color: #26344d;
+  background: repeating-linear-gradient(45deg, #0d1524, #0d1524 3px, #1b2a42 3px, #1b2a42 6px);
+}
+
+.cell.last {
+  box-shadow: inset 0 0 0 2px #f8fafc;
+}
+
+.dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #64748b;
+}
+
+.mark {
+  color: #ffffff;
+  font-weight: 700;
+  opacity: 0.8;
+}

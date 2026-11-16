@@ -1,0 +1,10 @@
+[project]
+name = "battleship-py"
+version = "0.1.0"
+description = "Battleship game engine and bot framework for the CS lab"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.ruff]
+line-length = 100

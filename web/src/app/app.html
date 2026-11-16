@@ -1,0 +1,280 @@
+<header class="hero">
+  <div>
+    <p class="eyebrow">Battleship lab</p>
+    <h1>Five stages to a winning bot</h1>
+    <p class="subtitle">
+      Place a fleet, hunt on one colour, finish the ship, rule out the water, then clear the 70%
+      gate.
+    </p>
+  </div>
+  @if (store.replay(); as replay) {
+    <div class="meta">
+      <span>{{ replay.meta.bots.join(' vs ') }}</span>
+      <span>{{ replay.meta.games }} games</span>
+      <span>seed {{ replay.meta.seed ?? 'random' }}</span>
+    </div>
+  }
+</header>
+
+<section class="panel loader">
+  <label>
+    Replay URL
+    <input type="text" [value]="url()" (input)="onUrl($event)" />
+  </label>
+  <button class="primary" (click)="load()" [disabled]="store.loading()">Load</button>
+  <label class="file">
+    Open JSON
+    <input type="file" accept=".json,application/json" (change)="onFile($event)" />
+  </label>
+  @if (store.loading()) {
+    <span class="hint">Loading...</span>
+  }
+  @if (store.error(); as error) {
+    <span class="error">{{ error }}</span>
+  }
+</section>
+
+@if (store.round(); as round) {
+  <nav class="stage-rail" aria-label="Lab stages">
+    @for (stage of stages(); track stage.id) {
+      <button
+        type="button"
+        class="stage-card"
+        [class.active]="activeStage() === stage.id"
+        [class.done]="stage.evidence.done"
+        [attr.aria-current]="activeStage() === stage.id ? 'step' : null"
+        (click)="onStage(stage.id)"
+      >
+        <span class="stage-number">{{ stage.number }}</span>
+        <span class="stage-copy">
+          <span class="stage-title">{{ stage.title }}</span>
+          <span class="stage-metric">{{ stage.evidence.metric }}</span>
+        </span>
+        <span class="stage-state">{{ stage.evidence.done ? 'done' : 'next' }}</span>
+      </button>
+    }
+  </nav>
+
+  @if (activeStageInfo(); as stage) {
+    <section class="panel stage-panel">
+      <div class="stage-intro">
+        <p class="eyebrow">Stage {{ stage.number }} of {{ stages().length }}</p>
+        <h2>{{ stage.title }}</h2>
+        <p class="subtitle">{{ stage.lead }}</p>
+      </div>
+
+      <div class="stage-columns">
+        <div class="stage-block">
+          <h3>Your task</h3>
+          <p class="stage-where">
+            Where: <code>{{ stage.where }}</code>
+          </p>
+          <p>{{ stage.task }}</p>
+        </div>
+        <div class="stage-block">
+          <h3>What the replay shows</h3>
+          <p class="stage-value">{{ stage.evidence.metric }}</p>
+          <p class="hint">{{ stage.evidence.detail }}</p>
+          <p class="hint">{{ stage.hint }}</p>
+        </div>
+      </div>
+
+      <p class="acceptance"><strong>Pass condition:</strong> {{ stage.acceptance }}</p>
+    </section>
+  }
+
+  @if (activeStage() === 'placement') {
+    <section class="panel placement-panel">
+      <div class="row">
+        <h2>Placement, revealed</h2>
+        <span class="hint">
+          During play each bot knows only its own fleet; the replay shows both.
+        </span>
+      </div>
+
+      <div class="board-grid">
+        <app-board-view [snapshot]="placementBoards().own" />
+        <app-board-view [snapshot]="placementBoards().enemy" />
+      </div>
+
+      <div class="fleet-summary">
+        @for (fleet of fleets(); track fleet.name) {
+          <article class="fleet-card">
+            <h3>{{ fleet.name }}</h3>
+            <p class="fleet-lengths">{{ fleet.lengths.join(' · ') }}</p>
+            <p class="hint">{{ fleet.cells }} occupied cells</p>
+          </article>
+        }
+      </div>
+    </section>
+  } @else if (activeStage() === 'benchmark') {
+    <section class="panel benchmark-panel">
+      @if (benchmark(); as bench) {
+        <div class="gate" [class.pass]="bench.passed">
+          <span class="gate-value">{{ bench.rateText }}%</span>
+          <div>
+            <h2>{{ bench.passed ? 'Gate passed' : 'Gate not reached yet' }}</h2>
+            <p>
+              {{ bench.bot }} vs {{ bench.opponent }} — {{ bench.wins }} of {{ bench.games }} wins,
+              average {{ bench.avgShots }} shots to win, {{ bench.invalid }} invalid shots.
+            </p>
+          </div>
+        </div>
+
+        <p class="hint">
+          Target: at least 70% against every reference bot. Run
+          <code>python main.py --bot MyBot --games 1000 --seed 42</code>
+          and load a replay of each matchup to check the gate.
+        </p>
+
+        <table class="stats-table">
+          <thead>
+            <tr>
+              <th>Bot</th>
+              <th>Wins</th>
+              <th>Win rate</th>
+              <th>Avg shots</th>
+              <th>Invalid</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of statsRows(); track row.bot) {
+              <tr>
+                <td>{{ row.bot }}</td>
+                <td>{{ row.wins }}</td>
+                <td>{{ row.winRate }}%</td>
+                <td>{{ row.avgShots }}</td>
+                <td>{{ row.invalid }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+  } @else {
+    <section class="panel transport">
+      <div class="row">
+        <button (click)="store.prevRound()" [disabled]="store.roundIndex() === 0">
+          Prev round
+        </button>
+        <select [value]="store.roundIndex()" (change)="onRoundChange($event)">
+          @for (item of store.rounds(); track $index; let i = $index) {
+            <option [value]="i">Round {{ i + 1 }}: {{ item.player0 }} vs {{ item.player1 }}</option>
+          }
+        </select>
+        <button
+          (click)="store.nextRound()"
+          [disabled]="store.roundIndex() >= store.rounds().length - 1"
+        >
+          Next round
+        </button>
+      </div>
+
+      <div class="row">
+        <span class="label">Bot view</span>
+        <div class="seat-toggle">
+          <button [class.active]="store.seat() === 0" (click)="onSeat(0)">
+            {{ round.player0 }}
+          </button>
+          <button [class.active]="store.seat() === 1" (click)="onSeat(1)">
+            {{ round.player1 }}
+          </button>
+        </div>
+        <span class="hint">player {{ store.seat() }}</span>
+      </div>
+
+      <div class="row">
+        <button (click)="store.prevEvent()" [disabled]="!store.canPrev()">Prev event</button>
+        <button class="primary" (click)="store.togglePlay()">
+          {{ store.playing() ? 'Pause' : 'Play' }}
+        </button>
+        <button (click)="store.nextEvent()" [disabled]="!store.canNext()">Next event</button>
+        <button (click)="store.setEventIndex(0)">Start</button>
+        <button (click)="store.setEventIndex(store.totalEvents())">End</button>
+        <span class="counter">event {{ store.eventIndex() }} / {{ store.totalEvents() }}</span>
+      </div>
+
+      <input
+        class="scrubber"
+        type="range"
+        min="0"
+        [max]="store.totalEvents()"
+        [value]="store.eventIndex()"
+        (input)="onSlider($event)"
+      />
+
+      <div class="row">
+        <label class="speed">
+          Step delay {{ store.speedMs() }} ms
+          <input
+            type="range"
+            min="80"
+            max="1200"
+            step="20"
+            [value]="store.speedMs()"
+            (input)="onSpeed($event)"
+          />
+        </label>
+        <p class="status">{{ store.currentEventLabel() }}</p>
+      </div>
+    </section>
+
+    <main class="layout">
+      <section class="boards">
+        <p class="hint">
+          Showing the view of <strong>{{ store.selectedName() }}</strong> (player
+          {{ store.seat() }}). Striped cells are water the bot can already rule out.
+        </p>
+        <div class="board-grid">
+          <app-board-view [snapshot]="boards().own" />
+          <app-board-view [snapshot]="boards().enemy" />
+        </div>
+        <ul class="legend">
+          <li><span class="swatch ship"></span>ship</li>
+          <li><span class="swatch miss"></span>miss</li>
+          <li><span class="swatch hit"></span>hit</li>
+          <li><span class="swatch sunk"></span>sunk</li>
+          <li><span class="swatch water"></span>known water</li>
+          <li><span class="swatch last"></span>last shot</li>
+        </ul>
+      </section>
+
+      <aside class="sidebar">
+        @if (statsRows().length) {
+          <section class="panel card">
+            <h2>Series statistics</h2>
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>Bot</th>
+                  <th>Wins</th>
+                  <th>Win rate</th>
+                  <th>Avg shots</th>
+                  <th>Invalid</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of statsRows(); track row.bot) {
+                  <tr>
+                    <td>{{ row.bot }}</td>
+                    <td>{{ row.wins }}</td>
+                    <td>{{ row.winRate }}%</td>
+                    <td>{{ row.avgShots }}</td>
+                    <td>{{ row.invalid }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </section>
+        }
+      </aside>
+    </main>
+  }
+} @else {
+  <section class="panel empty-state">
+    <p>
+      No replay loaded. Run <code>make data</code> for the demo replay, or open a replay JSON file.
+    </p>
+    <button class="primary" (click)="load()">Load data/latest.json</button>
+  </section>
+}

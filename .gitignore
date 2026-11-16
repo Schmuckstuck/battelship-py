@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+wheels/
+.venv/
+.mypy_cache/
+.ruff_cache/
+*.log
+
+# Node and Angular build output
+node_modules/
+web/node_modules/
+web/dist/
+.angular/
+web/.angular/
+.npm-cache/
+.uv-cache/
+*.tsbuildinfo
+
+# Local test artifacts
+web-viewer*.png
+lab-*.png
+ui-*.png
+.firefox-home/
+.firefox-profile/
+.browser-tools/
+.playwright-browsers/
+.DS_Store

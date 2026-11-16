@@ -1,0 +1,35 @@
+<article class="board-card">
+  <header>
+    <h3>{{ snapshot().title }}</h3>
+    <span>{{ snapshot().subtitle }}</span>
+  </header>
+
+  <div class="board">
+    <div class="corner"></div>
+    @for (column of columns; track column) {
+      <div class="coord">{{ column }}</div>
+    }
+    @for (row of rows(); track row.label) {
+      <div class="coord">{{ row.label }}</div>
+      @for (cell of row.cells; track cell.key) {
+        <div
+          class="cell"
+          [class.ship]="cell.ship"
+          [class.miss]="cell.state === 'miss'"
+          [class.hit]="cell.state === 'hit'"
+          [class.sunk]="cell.state === 'sunk'"
+          [class.water]="cell.water"
+          [class.last]="cell.last"
+          [attr.title]="cell.x + ',' + cell.y"
+        >
+          @if (cell.state === 'miss') {
+            <span class="dot"></span>
+          }
+          @if (cell.state === 'hit' || cell.state === 'sunk') {
+            <span class="mark">x</span>
+          }
+        </div>
+      }
+    }
+  </div>
+</article>
