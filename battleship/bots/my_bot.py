@@ -5,29 +5,29 @@ and choose_shot. Everything else (name, rng, last_shot, last_result) comes
 from Bot.
 """
 
-# Map is the board type; Point is one cell.
+# Map — тип игрового поля; Point — одна клетка.
 from ..map import Map, Point
-# Bot is the base class; PlayerView is the view for one turn.
+# Bot — базовый класс; PlayerView — представление на один ход.
 from ..player import Bot, PlayerView
-# The shared helper returns a valid random fleet.
+# Общая функция возвращает корректный случайный флот.
 from ..ship import random_placement
 
 
-# Inherit name, rng, last_shot, last_result and take_turn from Bot.
+# Атрибуты name, rng, last_shot, last_result и метод take_turn наследуются от Bot.
 class MyBot(Bot):
     """Your bot: edit the two methods below."""
 
-    # Init-phase job: return the fleet.
+    # Задача фазы инициализации: вернуть флот.
     def place_ships(self, board: Map) -> list[list[Point]]:
         """Return your fleet. random_placement is a valid starting point."""
-        # Delegate to the shared helper.
+        # Вызов общей функции.
         return random_placement(board, self.rng)
 
-    # Hunt-phase job: return one shot.
+    # Задача фазы поиска: вернуть один выстрел.
     def choose_shot(self, view: PlayerView) -> Point:
         """Return the next point to fire at.
 
         Hint: self.last_result is the result of your previous shot.
         """
-        # Pick one cell that has not been shot at.
+        # Выбирается клетка, по которой ещё не было выстрелов.
         return self.rng.choice(view.unknown_points())

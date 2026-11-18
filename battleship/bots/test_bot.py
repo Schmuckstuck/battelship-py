@@ -5,25 +5,25 @@ and choose_shot. Everything else (name, rng, last_shot, last_result) comes
 from Bot.
 """
 
-# Map is the board type; Point is one cell.
+# Map — тип игрового поля; Point — одна клетка.
 from ..map import Map, Point
-# Bot is the base class; PlayerView is the view for one turn.
+# Bot — базовый класс; PlayerView — представление на один ход.
 from ..player import Bot, PlayerView, CellState
-# The shared helper returns a valid random fleet.
+# Общая функция возвращает корректный случайный флот.
 from ..ship import random_placement
 
 
-# Inherit name, rng, last_shot, last_result and take_turn from Bot.
+# Атрибуты name, rng, last_shot, last_result и метод take_turn наследуются от Bot.
 class TestBot(Bot):
     """Your bot: edit the two methods below."""
 
-    # Init-phase job: return the fleet.
+    # Задача фазы инициализации: вернуть флот.
     def place_ships(self, board: Map) -> list[list[Point]]:
         """Return your fleet. random_placement is a valid starting point."""
-        # Delegate to the shared helper.
+        # Вызов общей функции.
         return random_placement(board, self.rng)
 
-    # Hunt-phase job: return one shot.
+    # Задача фазы поиска: вернуть один выстрел.
     def choose_shot(self, view: PlayerView) -> Point:
         """Return the next point to fire at.
 
@@ -39,23 +39,23 @@ class TestBot(Bot):
         targets : list[Point] = []
 
         for hit in view.points_of(CellState.HIT):
-            # All eight neighbours of the hit.
+            # Все восемь соседних клеток попадания.
             for point in view.board.neighbours(hit):
-                # Diagonal cells cannot continue a straight ship.
+                # Диагональные клетки не могут продолжать прямой корабль.
 
                 if point.x != hit.x and point.y != hit.y:
-                    # Skip this diagonal cell.
+                    # Диагональная клетка пропускается.
                     continue
 
                 if point in water:
                     continue
 
-                # Free cells that are not already candidates.
+                # Свободные клетки, ещё не добавленные в список целей.
                 if view.state(point) is CellState.UNKNOWN and point not in targets:
-                    # Add this cell as a target.
+                    # Клетка добавляется в список целей.
                     targets.append(point)
         if targets:
-            # Finish that ship first.
+            # Сначала добивается этот корабль.
             return self.rng.choice(targets)
 
 

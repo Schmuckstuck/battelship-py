@@ -1,85 +1,85 @@
 """RandomBot: the trivial baseline."""
 
-# Map is the board type; Point is one cell.
+# Map — тип игрового поля; Point — одна клетка.
 from ..map import Map, Point
-# Bot is the base class; PlayerView is the view for one turn.
+# Bot — базовый класс; PlayerView — представление на один ход.
 from ..player import Bot, PlayerView
-# The fleet lengths are 4, 3, 3, 2, 2, 2, 1, 1, 1, 1.
+# Длины кораблей флота: 4, 3, 3, 2, 2, 2, 1, 1, 1, 1.
 from ..ship import SHIP_LENGTHS
 
 
-# Inherit name, rng, last_shot, last_result and take_turn from Bot.
+# Атрибуты name, rng, last_shot, last_result и метод take_turn наследуются от Bot.
 class RandomBot(Bot):
     """Fires at random untried cells and places the fleet at random."""
 
-    # Init-phase job: return the fleet.
+    # Задача фазы инициализации: вернуть флот.
     def place_ships(self, board: Map) -> list[list[Point]]:
         """Return a random valid fleet, implemented inside this bot."""
-        # Retry the whole fleet if one ship cannot be placed.
+        # При неудаче с одним кораблём флот расставляется заново.
         while True:
-            # Ships placed so far.
+            # Уже расставленные корабли.
             ships: list[list[Point]] = []
-            # Ship cells plus their one-cell frame.
+            # Клетки кораблей и их рамка шириной в одну клетку.
             blocked: set[Point] = set()
-            # True if one ship could not be placed.
+            # Признак того, что корабль не удалось расставить.
             failed = False
-            # Place the largest ships first.
+            # Сначала расставляются самые длинные корабли.
             for length in sorted(SHIP_LENGTHS, reverse=True):
-                # Try one ship of this length.
+                # Попытка расставить корабль данной длины.
                 cells = self._place_ship(board, length, blocked)
-                # No free position for this ship.
+                # Свободной позиции для корабля нет.
                 if cells is None:
-                    # Mark the fleet as failed.
+                    # Флот помечается как неудачный.
                     failed = True
-                    # Stop placing smaller ships.
+                    # Расстановка более коротких кораблей прекращается.
                     break
-                # Keep the placed ship.
+                # Расставленный корабль сохраняется.
                 ships.append(cells)
-                # Mark the ship and its frame as blocked.
+                # Клетки корабля и его рамка помечаются как заблокированные.
                 for cell in cells:
-                    # The ship's own cell.
+                    # Собственная клетка корабля.
                     blocked.add(cell)
-                    # The one-cell frame around the ship.
+                    # Рамка шириной в одну клетку вокруг корабля.
                     blocked.update(board.neighbours(cell))
-            # Every ship fitted.
+            # Все корабли расставлены.
             if not failed:
-                # Return the valid fleet.
+                # Возвращается корректный флот.
                 return ships
 
-    # Try to place one ship of the given length; return None if it does not fit.
+    # Попытка расставить корабль заданной длины; None, если подходящей позиции нет.
     def _place_ship(
         self, board: Map, length: int, blocked: set[Point]
     ) -> list[Point] | None:
         """Try random positions for one ship without touching blocked cells."""
-        # Try at most 1000 random positions.
+        # Проверяется не более 1000 случайных позиций.
         for _ in range(1000):
-            # Pick horizontal or vertical with equal probability.
+            # Горизонтальная или вертикальная ориентация выбирается равновероятно.
             horizontal = self.rng.randrange(2) == 0
-            # Horizontal ship.
+            # Горизонтальный корабль.
             if horizontal:
-                # Leftmost column; leave room for the length.
+                # Левый столбец; оставляется место под длину корабля.
                 x = self.rng.randrange(board.width - length + 1)
-                # Any row.
+                # Произвольная строка.
                 y = self.rng.randrange(board.height)
-                # Consecutive cells to the right.
+                # Последовательные клетки вправо.
                 cells = [board.point(x + i, y) for i in range(length)]
-            # Vertical ship.
+            # Вертикальный корабль.
             else:
-                # Any column.
+                # Произвольный столбец.
                 x = self.rng.randrange(board.width)
-                # Top row; leave room for the length.
+                # Верхняя строка; оставляется место под длину корабля.
                 y = self.rng.randrange(board.height - length + 1)
-                # Consecutive cells downward.
+                # Последовательные клетки вниз.
                 cells = [board.point(x, y + i) for i in range(length)]
-            # A position is valid only if every cell is on the board and free.
+            # Позиция корректна, только если все её клетки в пределах поля и свободны.
             if all(cell is not None and cell not in blocked for cell in cells):
-                # Return the ship cells, without the None checks.
+                # Возвращаются клетки корабля без проверок на None.
                 return [cell for cell in cells if cell is not None]
-        # No position found; the caller retries the whole fleet.
+        # Позиция не найдена; вызывающий код расставляет флот заново.
         return None
 
-    # Hunt-phase job: return one shot.
+    # Задача фазы поиска: вернуть один выстрел.
     def choose_shot(self, view: PlayerView) -> Point:
         """Shoot a random unknown cell."""
-        # Pick one cell that has not been shot at.
+        # Выбирается клетка, по которой ещё не было выстрелов.
         return self.rng.choice(view.unknown_points())

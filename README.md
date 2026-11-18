@@ -1,46 +1,46 @@
 # Battleship-Py
 
-Battleship game engine and bot framework for the lab. The complete student guide is [note.md](note.md); a shorter bot-writing walkthrough is [BOT_GUIDE.md](BOT_GUIDE.md).
+Игровой движок игры «Морской бой» и фреймворк для разработки ботов, используемые в лабораторной работе. Краткое руководство по написанию бота — в [BOT_GUIDE.md](BOT_GUIDE.md).
 
-## Requirements
+## Требования
 
-- **Python 3.11 or newer** (3.12 recommended). The engine, bots and CLI use only the standard library, so there is nothing to `pip install`.
-- **Node.js 22.12+ and npm** only if you want to build the Angular replay viewer. The bot lab works without Node.
-- **GNU Make** is optional. Every make target has a direct command below.
-- A modern browser for the viewer. Git is needed only to clone or update the repository.
+- **Python 3.11 или новее** (рекомендуется 3.12). Движок, боты и интерфейс командной строки используют только стандартную библиотеку, поэтому `pip install` не требуется.
+- **Node.js 22.12+ и npm** — только если требуется собрать средство просмотра повторов на Angular. Для лабораторной работы с ботами Node.js не нужен.
+- **GNU Make** — необязательно. Для каждой цели make ниже приведена эквивалентная прямая команда.
+- Современный браузер для средства просмотра повторов. Git требуется только для клонирования или обновления репозитория.
 
-## Setup
+## Настройка окружения
 
-### Windows tools with winget
+### Установка инструментов в Windows с помощью winget
 
-`winget` is included with App Installer on Windows 10/11. Open PowerShell and check:
+`winget` входит в состав App Installer в Windows 10 и 11. Откройте PowerShell и проверьте:
 
 ```powershell
 winget --version
 ```
 
-If `winget` is not recognized, install or update **App Installer** from the Microsoft Store, or download Python from [python.org](https://www.python.org/downloads/) and Node.js from [nodejs.org](https://nodejs.org/en/download).
+Если команда `winget` не распознаётся, установите или обновите **App Installer** из Microsoft Store либо загрузите Python с сайта [python.org](https://www.python.org/downloads/), а Node.js — с сайта [nodejs.org](https://nodejs.org/en/download).
 
-Install the tools with winget:
+Установите инструменты с помощью winget:
 
 ```powershell
-# Python 3.12 (the lab requires 3.11 or newer).
+# Python 3.12 (для лабораторной работы требуется версия 3.11 или новее).
 winget install -e --id Python.Python.3.12 --accept-package-agreements --accept-source-agreements
 
-# Node.js current release; npm is included with Node.js.
+# Текущая версия Node.js; npm входит в состав Node.js.
 winget install -e --id OpenJS.NodeJS --accept-package-agreements --accept-source-agreements
 
-# Or use the LTS release instead:
+# Вместо неё можно установить версию LTS:
 # winget install -e --id OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements
 
-# Git, needed only to clone or update the repository.
+# Git — только для клонирования или обновления репозитория.
 winget install -e --id Git.Git --accept-package-agreements --accept-source-agreements
 
-# uv, optional Python environment manager.
+# uv — необязательный менеджер окружений Python.
 winget install -e --id astral-sh.uv --accept-package-agreements --accept-source-agreements
 ```
 
-To install the required three in one loop:
+Чтобы установить три обязательных инструмента одним циклом:
 
 ```powershell
 $tools = @("Python.Python.3.12", "OpenJS.NodeJS", "Git.Git")
@@ -49,7 +49,7 @@ foreach ($tool in $tools) {
 }
 ```
 
-Close and reopen PowerShell so the new `PATH` is active, then check the versions:
+Закройте и снова откройте PowerShell, чтобы новый `PATH` вступил в силу, затем проверьте версии:
 
 ```powershell
 python --version
@@ -58,120 +58,122 @@ npm --version
 git --version
 ```
 
-`npm` comes with Node.js; do not install it separately. If `python` opens the Microsoft Store, disable the `python.exe` and `python3.exe` aliases under **Settings > Apps > Advanced app settings > App execution aliases**. The winget Python package is a real interpreter; the Store alias is not.
+`npm` поставляется вместе с Node.js, поэтому отдельно устанавливать его не нужно. Если команда `python` открывает Microsoft Store, отключите псевдонимы `python.exe` и `python3.exe` в разделе **Параметры > Приложения > Дополнительные параметры приложений > Псевдонимы выполнения приложений**. Пакет Python из winget представляет собой полноценный интерпретатор, тогда как псевдоним Microsoft Store им не является.
 
-### Windows Python environment
+### Виртуальное окружение Python в Windows
 
-From the repository root:
+Из корня репозитория:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
-If PowerShell refuses to run the activation script:
+Если PowerShell отказывается выполнять сценарий активации:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\.venv\Scripts\Activate.ps1
 ```
 
-This creates a project-local `.venv`. Activate it for the `python ...` commands below; if you prefer not to activate, use `.\.venv\Scripts\python.exe ...` instead. You do not need to activate it for `make`: the Makefile detects `.venv\Scripts\python.exe` automatically. If `python` is not available but the Python launcher is, use `py -3 -m venv .venv`.
+В результате создаётся локальное для проекта окружение `.venv`. Активируйте его для приведённых ниже команд `python ...`; если активация нежелательна, используйте вместо неё `.\.venv\Scripts\python.exe ...`. Для `make` активация не требуется: Makefile автоматически обнаруживает `.venv\Scripts\python.exe`. Если `python` недоступен, но установлен загрузчик Python, выполните `py -3 -m venv .venv`.
 
-### macOS and Linux
+### macOS и Linux
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-Use `python3.12` instead of `python3` if your `python3` is older than 3.11.
+Если версия `python3` ниже 3.11, используйте `python3.12` вместо `python3`.
 
-### Using uv (optional)
+### Использование uv (необязательно)
 
-If [uv](https://docs.astral.sh/uv/) is installed, it can create the same environment from `.python-version`:
+Если установлен [uv](https://docs.astral.sh/uv/), он может создать то же окружение на основе файла `.python-version`:
 
 ```bash
 uv sync
 ```
 
-Then activate `.venv` as above, or prefix commands with `uv run`, for example `uv run python main.py --bot MyBot --games 10 --seed 42`.
+Затем активируйте `.venv`, как описано выше, или добавляйте к командам префикс `uv run`, например: `uv run python main.py --bot MyBot --games 10 --seed 42`.
 
-## Verify the setup
+## Проверка настройки
 
-Run a short series from the repository root:
+Запустите короткую серию из корня репозитория:
 
 ```bash
-python main.py --bot MyBot --opponent RandomBot --games 10 --seed 42
+python main.py --bot MyBot --opponent RandomBot --games 10 --seed 42 --export-json web/public/data/latest.json
+
 ```
 
-The output starts with `games=10` and has one line per bot with wins, win rate, average shots to win and invalid shots. If Python cannot import `battleship`, you are not in the repository root.
+Вывод начинается со строки `games=10` и содержит по одной строке на каждого бота: число побед, долю побед, среднее число выстрелов до победы и число некорректных выстрелов. Если Python не может импортировать пакет `battleship`, вы находитесь не в корне репозитория.
 
-## Experiment and benchmark
+## Эксперименты и сравнительное тестирование
 
-Edit [battleship/bots/my_bot.py](battleship/bots/my_bot.py), then run:
+Отредактируйте файл [battleship/bots/my_bot.py](battleship/bots/my_bot.py), затем выполните:
 
 ```bash
-# Quick feedback against one opponent.
-python main.py --bot MyBot --opponent RandomBot --games 100 --seed 42
+# Быстрая проверка против одного соперника.
+python main.py --bot MyBot --opponent RandomBot --games 100 --seed 42 --export-json web/public/data/latest.json
 
-# Benchmark against RandomBot, HuntBot and ParityBot.
-python main.py --bot MyBot --games 1000 --seed 42
+# Сравнительное тестирование против RandomBot, HuntBot и ParityBot.
+python main.py --bot MyBot --games 1000 --seed 42 --export-json web/public/data/latest.json
+
 ```
 
-The same `--seed` must reproduce the same series. Keep `--games` small while iterating and use 1000 for the final result. The five stages and the 70% target are in [note.md](note.md#lab-stages); [BOT_GUIDE.md](BOT_GUIDE.md) walks through a first bot.
+Одно и то же значение `--seed` должно воспроизводить одну и ту же серию. Во время итераций задавайте небольшое значение `--games`, а для окончательного результата используйте 1000. Пять этапов и целевой показатель 70 % описаны в [note.md](note.md#lab-stages); в [BOT_GUIDE.md](BOT_GUIDE.md) разобран первый бот.
 
-## Using make (optional)
+## Использование make (необязательно)
 
-If GNU Make is installed, the common commands are:
+Если установлен GNU Make, основные команды имеют следующий вид:
 
 ```bash
-# Show the Python interpreter make will use.
+# Показать интерпретатор Python, который будет использовать make.
 make help
-# Write the demo replay for the viewer.
+# Записать демонстрационный повтор для средства просмотра.
 make data
-# Install viewer dependencies and build the Angular app.
+# Установить зависимости средства просмотра и собрать приложение Angular.
 make build
-# Serve the built viewer at http://localhost:8000.
+# Запустить собранное средство просмотра по адресу http://localhost:8000.
 make server
-# Start the Angular dev server at http://localhost:4200.
+# Запустить сервер разработки Angular по адресу http://localhost:4200.
 make dev
 ```
 
-The Makefile uses `.venv/Scripts/python.exe` on Windows or `.venv/bin/python` elsewhere when it exists. To force a different interpreter, pass `PYTHON=...`, for example:
+Makefile использует `.venv/Scripts/python.exe` в Windows или `.venv/bin/python` в остальных системах, если соответствующий файл существует. Чтобы принудительно выбрать другой интерпретатор, передайте `PYTHON=...`, например:
 
 ```bash
 make data PYTHON=.venv/Scripts/python.exe
 ```
 
-## CLI flags
+## Параметры командной строки
 
-| Flag | Meaning |
+| Параметр | Назначение |
 | - | - |
-| `--bot NAME` | bot to benchmark; default ParityBot |
-| `--opponent NAME` | single opponent; without it all reference bots are used |
-| `--games N` | games per series; default 1000 |
-| `--seed N` | random seed for reproducibility |
-| `--export-json PATH` | save a replay (requires `--opponent`) |
+| `--bot NAME` | бот, для которого выполняется тестирование; по умолчанию ParityBot |
+| `--opponent NAME` | единственный соперник; если параметр не указан, используются все эталонные боты |
+| `--games N` | число партий в серии; по умолчанию 1000 |
+| `--seed N` | зерно генератора случайных чисел для воспроизводимости |
+| `--export-json PATH` | сохранить повтор (требуется `--opponent`) |
 
-Reference bots: RandomBot, HuntBot and ParityBot.
+Эталонные боты: RandomBot, HuntBot и ParityBot.
 
-## Replay viewer
+## Средство просмотра повторов
 
-The Angular viewer shows recorded games and the five lab stages. Node.js is needed only to build it; serving the built files uses Python.
+Приложение на Angular отображает записанные партии и пять этапов лабораторной работы. Node.js требуется только для его сборки; для раздачи собранных файлов используется Python.
 
 ```bash
-# 1. Generate a demo replay.
+# 1. Сгенерировать демонстрационный повтор.
 make data
 
-# 2. Install viewer dependencies and build (Node.js and npm required).
+# 2. Установить зависимости средства просмотра и выполнить сборку (требуются Node.js и npm).
 make build
 
-# 3. Serve it at http://localhost:8000.
+# 3. Запустить его по адресу http://localhost:8000.
 make server
 ```
 
-Without make:
+Без make:
 
 ```bash
 python main.py --bot ParityBot --opponent HuntBot --games 10 --seed 42 --export-json web/public/data/latest.json
@@ -182,17 +184,17 @@ cd ..
 python -m http.server 8000 --directory web/dist/battleship-viewer/browser
 ```
 
-Open http://localhost:8000. `make data` writes a demo of ParityBot vs HuntBot; to inspect your own bot, export it to the same path:
+Откройте http://localhost:8000. Команда `make data` записывает демонстрационную партию ParityBot против HuntBot; чтобы просмотреть собственного бота, экспортируйте его в тот же путь:
 
 ```bash
 python main.py --bot MyBot --opponent ParityBot --games 10 --seed 42 --export-json web/public/data/latest.json
 ```
 
-After exporting a new replay, run `make build` again so `web/dist` receives the new JSON, or use `make dev` / `npm start`, which serves `web/public` directly at http://localhost:4200.
+После экспорта нового повтора выполните `make build` ещё раз, чтобы новый файл JSON попал в `web/dist`, или используйте `make dev` / `npm start`, которые напрямую раздают каталог `web/public` по адресу http://localhost:4200.
 
-The full viewer description, including the five stages, is in [note.md](note.md#replay-viewer).
+Полное описание средства просмотра, включая пять этапов, приведено в [note.md](note.md#replay-viewer).
 
-## Structure
+## Структура проекта
 
 ```text
 battleship/
@@ -200,67 +202,67 @@ battleship/
 - ship.py       # Ship, validate_fleet, random_placement
 - player.py     # Bot, CellState, PlayerView
 - engine.py     # BattleshipGame, Fleet, ShotResult
-- recorder.py   # records games for replay
-- exporter.py   # saves replay JSON
-- simulator.py  # play_series - series statistics
-- bots/         # default bots and the my_bot.py template
-web/            # Angular replay viewer and the five lab stages
-main.py         # CLI
-README.md       # this file
-BOT_GUIDE.md    # short bot-writing guide
-note.md         # complete student guide
+- recorder.py   # записывает партии для повторов
+- exporter.py   # сохраняет повтор в формате JSON
+- simulator.py  # play_series — статистика серии
+- bots/         # стандартные боты и шаблон my_bot.py
+web/            # средство просмотра повторов на Angular и пять этапов лабораторной работы
+main.py         # интерфейс командной строки
+README.md       # этот файл
+BOT_GUIDE.md    # краткое руководство по написанию бота
+note.md         # полное руководство для студентов
 ```
 
-## Maintainer notes
+## Заметки для сопровождающих
 
-### Starter and teaching examples
+### Стартовый вариант и учебные примеры
 
-This repository ships the student starter without a worked bot in `battleship/bots/`: `battleship/bots/my_bot.py` is the file the student edits, and the other bots are the opponents used by the lab. The two examples in [note.md](note.md#example-1-hunting-only-bot) are deliberate teaching examples. Do not copy them into `my_bot.py` in the distributed starter, and do not add another complete solution or solution replay to the repository.
+Репозиторий поставляется со стартовым вариантом для студентов, не содержащим готового бота в каталоге `battleship/bots/`: файл `battleship/bots/my_bot.py` предназначен для редактирования студентом, а остальные боты являются соперниками, используемыми в лабораторной работе. Два примера в [note.md](note.md#example-1-hunting-only-bot) представляют собой специально подобранные учебные примеры. Не следует копировать их в `my_bot.py` распространяемого стартового варианта, а также добавлять в репозиторий другие полные решения или повторы с решениями.
 
-### Default bots
+### Стандартные боты
 
-The three default bots each carry their own copy of the random placement loop (`place_ships` plus `_place_ship` in the bot module) and do not import `random_placement`. `MyBot` deliberately keeps the one-line `random_placement(board, self.rng)` call as the student's starting point. The placement code is intentionally duplicated so each default bot can be read on its own.
+Каждый из трёх стандартных ботов содержит собственную копию цикла случайной расстановки (функции `place_ships` и `_place_ship` в модуле бота) и не импортирует `random_placement`. В `MyBot` намеренно сохранён вызов `random_placement(board, self.rng)` в одну строку как отправная точка для студента. Код расстановки намеренно дублируется, чтобы каждый стандартный бот можно было читать независимо от остальных.
 
-### Engine architecture
+### Архитектура движка
 
-- `GamePhase` is INIT, HUNT or FINISHED. In INIT `BattleshipGame` calls `place_ships` while both fleets stay hidden; then the phase switches to HUNT and the shot loop starts. The phase becomes FINISHED when a fleet is sunk.
-- `BattleshipGame.run(first)` validates both fleets, then runs the shot loop. A miss passes the turn; a hit or a sunk ship keeps the turn.
-- `PlayerView` gives the bot a snapshot of the engine grid, so the bot cannot change it.
-- `_sanitize` replaces an invalid shot with a random unknown cell and counts it in `invalid_shots`.
-- `Bot` in `battleship/player.py` owns `name`, `rng`, `last_shot` and `last_result`, provides default `place_ships` and `choose_shot`, and implements `take_turn`: it records the result of the previous shot in `last_result`, then calls `choose_shot`.
-- `Recorder` collects rounds and events; `write_replay` saves them as JSON.
+- `GamePhase` принимает одно из значений: INIT, HUNT или FINISHED. В фазе INIT `BattleshipGame` вызывает `place_ships`, при этом оба флота остаются скрытыми; затем фаза переключается в HUNT и начинается цикл выстрелов. Фаза переходит в FINISHED, когда один из флотов полностью потоплен.
+- `BattleshipGame.run(first)` проверяет корректность обоих флотов, после чего запускает цикл выстрелов. При промахе ход переходит к сопернику; при попадании или потоплении корабля ход сохраняется.
+- `PlayerView` предоставляет боту снимок сетки движка, поэтому бот не может её изменить.
+- `_sanitize` заменяет некорректный выстрел случайной неизвестной клеткой и учитывает его в счётчике `invalid_shots`.
+- `Bot` из модуля `battleship/player.py` хранит атрибуты `name`, `rng`, `last_shot` и `last_result`, предоставляет реализации `place_ships` и `choose_shot` по умолчанию и реализует метод `take_turn`: он записывает результат предыдущего выстрела в `last_result`, после чего вызывает `choose_shot`.
+- `Recorder` накапливает раунды и события; `write_replay` сохраняет их в формате JSON.
 
-### Series statistics
+### Статистика серии
 
-`play_series` returns a dict where every metric is a two-element list indexed by seat `[bot0, bot1]` (a bot can play against itself):
+`play_series` возвращает словарь (dict), в котором каждый показатель представлен списком из двух элементов по числу мест — `[bot0, bot1]` (бот может играть сам с собой):
 
-| Key | Meaning |
+| Ключ | Назначение |
 | - | - |
-| `games` | number of games |
-| `bots` | bot names `[bot0, bot1]` |
-| `wins` | wins per seat |
-| `win_rate` | win rate per seat |
-| `avg_shots_to_win` | average shots to win (won games only) |
-| `avg_shots_total` | average shots per game |
-| `invalid_shots` | invalid shots replaced by the engine |
+| `games` | число партий |
+| `bots` | имена ботов `[bot0, bot1]` |
+| `wins` | число побед для каждого места |
+| `win_rate` | доля побед для каждого места |
+| `avg_shots_to_win` | среднее число выстрелов до победы (только для выигранных партий) |
+| `avg_shots_total` | среднее число выстрелов за партию |
+| `invalid_shots` | некорректные выстрелы, заменённые движком |
 
-### Viewer architecture
+### Архитектура средства просмотра
 
-- `web/src/app/replay-store.ts` keeps replay state as signals: round, event index, selected seat, playback and derived boards. It also derives the five lab-stage evidence by replaying the shots.
-- `web/src/app/lab-stages.ts` holds the five stage descriptions and hints.
-- `web/src/app/app.html` renders the stage rail, the active stage panel and the stage-specific body.
-- `board-view/` renders one board, including the striped known-water cells.
-- `web/dist/battleship-viewer/browser` is the built viewer output; `npm run build` writes it.
+- `web/src/app/replay-store.ts` хранит состояние повтора в виде сигналов: раунд, индекс события, выбранное место, воспроизведение и производные игровые поля. Кроме того, он вычисляет признаки выполнения пяти этапов лабораторной работы, повторно воспроизводя последовательность выстрелов.
+- `web/src/app/lab-stages.ts` содержит описания и подсказки для пяти этапов.
+- `web/src/app/app.html` отображает ленту этапов, панель активного этапа и содержимое, зависящее от этапа.
+- `board-view/` отображает одно игровое поле, включая клетки известной воды со штриховкой.
+- `web/dist/battleship-viewer/browser` — каталог с результатами сборки средства просмотра; файлы в него записывает команда `npm run build`.
 
-### Manual checks
+### Ручные проверки
 
-The repository ships without an automated test suite. Verify a change with a short series:
+Репозиторий не содержит автоматизированного набора тестов. Проверяйте изменения с помощью короткой серии:
 
 ```bash
-# Run a short series.
+# Запустить короткую серию.
 python main.py --bot ParityBot --opponent HuntBot --games 10 --seed 42
-# Check the Python style.
+# Проверить соблюдение стиля Python.
 ruff check .
-# Build the Angular viewer.
+# Собрать приложение просмотра на Angular.
 make build
 ```

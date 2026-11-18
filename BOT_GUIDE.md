@@ -1,23 +1,23 @@
-# How to write a bot
+# Как написать бота
 
-This is the short bot-writing guide. The complete lab guide, rules and worked examples are in [note.md](note.md); the repository overview is in [README.md](README.md).
+Это краткое руководство по написанию бота. Полное руководство по лабораторной работе, правила и разобранные примеры приведены в [note.md](note.md); обзор репозитория — в [README.md](README.md).
 
-The file you edit is [battleship/bots/my_bot.py](battleship/bots/my_bot.py). Keep the class name `MyBot`: the CLI looks for it.
+Файл, который требуется редактировать, — [battleship/bots/my_bot.py](battleship/bots/my_bot.py). Сохраните имя класса `MyBot`: именно его ищет интерфейс командной строки.
 
-## The contract
+## Контракт
 
-A bot is a subclass of `Bot` with two jobs:
+Бот представляет собой подкласс `Bot` и выполняет две задачи:
 
-| Method | When it is called | What it returns |
+| Метод | Когда вызывается | Что возвращает |
 | - | - | - |
-| `place_ships(board)` | once, in the init phase | 10 ships, each a list of `Point` |
-| `choose_shot(view)` | every turn | one `Point` to fire at |
+| `place_ships(board)` | один раз, в фазе инициализации | 10 кораблей, каждый — список объектов `Point` |
+| `choose_shot(view)` | каждый ход | точку `Point`, по которой выполняется выстрел |
 
-Everything else is already in `Bot`: `name`, `rng`, `last_shot`, `last_result` and the `take_turn` bookkeeping. You do not write `__init__`, and there is no state-machine boilerplate to fill in.
+Всё остальное уже реализовано в `Bot`: атрибуты `name`, `rng`, `last_shot`, `last_result` и служебная логика `take_turn`. Метод `__init__` писать не нужно, и шаблонный код конечного автомата заполнять не требуется.
 
-## The smallest bot
+## Минимальный бот
 
-Start with this. It places a random valid fleet and shoots a random unknown cell.
+Начните с приведённого ниже варианта. Он расставляет корректный флот случайным образом и стреляет по случайной неизвестной клетке.
 
 ```python
 from ..map import Map, Point
@@ -33,38 +33,38 @@ class MyBot(Bot):
         return self.rng.choice(view.unknown_points())
 ```
 
-That is a complete, valid bot. It will not win 70% of the games, but it runs, and every part of it is replaceable.
+Это полный и корректный бот. Он не будет выигрывать 70 % партий, но он работоспособен, и любую его часть можно заменить.
 
-### Placement
+### Расстановка кораблей
 
-`place_ships` must return 10 ships with lengths `4, 3, 3, 2, 2, 2, 1, 1, 1, 1`. Each ship is a list of `Point` cells in a straight horizontal or vertical line. Ships must stay on the board, must not overlap, and must not touch even diagonally. `random_placement(board, self.rng)` is a valid default; the full placement rules and diagrams are in [note.md](note.md#placement).
+`place_ships` должен возвращать 10 кораблей длиной `4, 3, 3, 2, 2, 2, 1, 1, 1, 1`. Каждый корабль — список клеток `Point`, образующих прямую горизонтальную или вертикальную линию. Корабли должны находиться в пределах поля, не перекрываться и не соприкасаться даже по диагонали. Вызов `random_placement(board, self.rng)` является корректной реализацией по умолчанию; полные правила расстановки и схемы приведены в [note.md](note.md#placement).
 
-The engine validates the fleet and raises `ValueError` with the bot name and the reason if it is wrong.
+Движок проверяет корректность флота и при ошибке возбуждает исключение `ValueError` с указанием имени бота и причины.
 
-### What the base class gives you
+### Что предоставляет базовый класс
 
-- `self.name` - the bot name.
-- `self.rng` - the seeded random generator. Use only this for randomness.
-- `self.last_shot` - the point you fired at on your previous turn.
-- `self.last_result` - `CellState.MISS`, `HIT`, `SUNK`, or `None` on the first turn.
-- `self.take_turn(view)` - called by the engine. It updates `last_result` and then calls `choose_shot`. You do not override it.
+- `self.name` — имя бота.
+- `self.rng` — генератор случайных чисел с заданным зерном. Используйте только его для получения случайных значений.
+- `self.last_shot` — точка, по которой был произведён выстрел на предыдущем ходу.
+- `self.last_result` — значение `CellState.MISS`, `HIT`, `SUNK` или `None` на первом ходу.
+- `self.take_turn(view)` — вызывается движком. Метод обновляет `last_result`, после чего вызывает `choose_shot`. Переопределять его не нужно.
 
-### What the view gives you
+### Что предоставляет представление
 
-`view` is your knowledge of the **enemy** board on this turn. It is a snapshot; it does not change after you return from `choose_shot`.
+`view` — это знание бота о поле **соперника** на текущем ходу. Это снимок состояния; после возврата из `choose_shot` он не изменяется.
 
-| Expression | Meaning |
+| Выражение | Назначение |
 | - | - |
-| `view.board` | the `Map`; use `board.neighbours(point)` for the eight surrounding cells |
-| `view.state(point)` | `CellState.UNKNOWN`, `MISS`, `HIT` or `SUNK` |
-| `view.points_of(state)` | all enemy cells in that state |
-| `view.unknown_points()` | cells you have not shot at yet |
-| `view.remaining_ships` | lengths of enemy ships that are not sunk |
-| `view.shots_fired` | how many shots you have made before this turn |
+| `view.board` | объект `Map`; для получения восьми окружающих клеток используйте `board.neighbours(point)` |
+| `view.state(point)` | `CellState.UNKNOWN`, `MISS`, `HIT` или `SUNK` |
+| `view.points_of(state)` | все клетки поля соперника в указанном состоянии |
+| `view.unknown_points()` | клетки, по которым ещё не было выстрелов |
+| `view.remaining_ships` | длины кораблей соперника, которые не потоплены |
+| `view.shots_fired` | число выстрелов, сделанных до текущего хода |
 
-## Example: follow up on a hit
+## Пример: продолжение после попадания
 
-A hit keeps your turn. The simplest useful improvement is to shoot an unknown side neighbour of a cell you already hit.
+При попадании ход сохраняется. Простейшее полезное улучшение — стрелять по неизвестной клетке, соседней с уже поражённой по горизонтали или вертикали.
 
 ```python
 from ..map import Map, Point
@@ -92,55 +92,53 @@ class MyBot(Bot):
         return self.rng.choice(view.unknown_points())
 ```
 
-Why this works:
+Почему это работает:
 
-- `view.points_of(CellState.HIT)` gives every hit that is still part of an unsunk ship.
-- `view.board.neighbours(hit)` gives all eight surrounding cells.
-- We skip the four diagonal cells: a straight ship can only continue left, right, up or down.
-- We keep only `UNKNOWN` cells, so we do not shoot the same cell twice.
-- If there is no open hit, we go back to hunting.
+- `view.points_of(CellState.HIT)` возвращает все попадания, которые по-прежнему относятся к непотопленному кораблю.
+- `view.board.neighbours(hit)` возвращает все восемь окружающих клеток.
+- Четыре диагональные клетки пропускаются: прямой корабль может продолжаться только влево, вправо, вверх или вниз.
+- Учитываются только клетки в состоянии `UNKNOWN`, поэтому по одной и той же клетке не производится двух выстрелов.
+- Если открытых попаданий нет, бот возвращается к поиску.
 
-This is the first real step of the lab. The full hunting strategy and the complete worked examples are in [note.md](note.md#example-1-hunting-only-bot).
+Это первый содержательный шаг лабораторной работы. Полная стратегия поиска и разобранные примеры приведены в [note.md](note.md#example-1-hunting-only-bot).
 
-## Understanding parity in one paragraph
+## Чётность: краткое объяснение
 
-A checkerboard colour is the set of cells where `(x + y) % 2 == 0`. Every ship of length two or more covers both colours, so searching one colour cannot miss a large ship; one-cell ships can hide on the other colour, which is why the fallback to all unknown cells matters. The full explanation is in [note.md](note.md#understanding-paritybot).
+Цвет шахматной раскраски — это множество клеток, для которых выполняется условие `(x + y) % 2 == 0`. Любой корабль длиной два и более занимает клетки обоих цветов, поэтому поиск только по одному цвету не может пропустить крупный корабль; однопалубные корабли могут находиться на клетках другого цвета, поэтому важен переход к перебору всех неизвестных клеток. Полное объяснение приведено в [note.md](note.md#understanding-paritybot).
 
-## How to run it
+## Запуск
 
-From the repository root:
+Из корня репозитория:
 
 ```bash
-# Quick check against one bot.
+# Быстрая проверка против одного бота.
 python main.py --bot MyBot --opponent RandomBot --games 100 --seed 42
 
-# Full benchmark against RandomBot, HuntBot and ParityBot.
+# Полное сравнительное тестирование против RandomBot, HuntBot и ParityBot.
 python main.py --bot MyBot --games 1000 --seed 42
 
-# Export ten games so the viewer can show them.
+# Экспорт десяти партий для отображения в средстве просмотра.
 python main.py --bot MyBot --opponent ParityBot --games 10 --seed 42 --export-json web/public/data/latest.json
 ```
 
-The output contains wins, win rate, average shots to win and **invalid shots**. Aim to keep invalid shots at zero: an invalid shot is replaced by a random cell and wastes a turn.
+Вывод содержит число побед, долю побед, среднее число выстрелов до победы и число **некорректных выстрелов**. Стремитесь свести число некорректных выстрелов к нулю: некорректный выстрел заменяется случайной клеткой и расходует ход.
 
-The same seed must reproduce the same series. If it does not, you are probably using the global `random` module somewhere.
+Одно и то же зерно должно воспроизводить одну и ту же серию. Если это не так, вероятно, где-то используется глобальный модуль `random`.
 
-## Common mistakes
+## Типичные ошибки
 
-| Mistake | What happens | Fix |
+| Ошибка | Что происходит | Как исправить |
 | - | - | - |
-| Returning `None` or a string from `choose_shot` | the engine replaces it with a random shot and counts an invalid shot | always return a `Point` |
-| Shooting a cell that is already `MISS`, `HIT` or `SUNK` | same invalid-shot penalty | choose from `view.unknown_points()` or check `view.state(point)` |
-| Returning a point outside the board | invalid shot | use `view.unknown_points()`, or check `board.point(x, y) is not None` |
-| Using `random.choice` instead of `self.rng.choice` | the series is no longer reproducible | use `self.rng` everywhere |
-| Keeping target state in a local variable | it disappears before the next turn | store it as `self.something` |
-| Returning the wrong fleet | `ValueError` with the bot name and the reason | 10 ships, lengths `4, 3, 3, 2, 2, 2, 1, 1, 1, 1`, no overlap, no touching |
-| Using `view` after the turn | it is a snapshot and will not update | store the data you need on `self`, or use the next view |
-| Printing on every shot | thousands of games become slow | print only in a small run |
+| Метод `choose_shot` возвращает `None` или строку | движок заменяет его случайным выстрелом и учитывает некорректный выстрел | всегда возвращайте объект `Point` |
+| Выстрел по клетке, находящейся в состоянии `MISS`, `HIT` или `SUNK` | выстрел учитывается как некорректный | выбирайте клетку из `view.unknown_points()` или проверяйте `view.state(point)` |
+| Возврат точки за пределами поля | некорректный выстрел | используйте `view.unknown_points()` или проверяйте условие `board.point(x, y) is not None` |
+| Использование `random.choice` вместо `self.rng.choice` | серия перестаёт быть воспроизводимой | используйте `self.rng` повсюду |
+| Хранение состояния цели в локальной переменной | оно теряется до следующего хода | сохраняйте его в атрибуте вида `self.something` |
+| Возврат некорректного флота | исключение `ValueError` с указанием имени бота и причины | 10 кораблей длиной `4, 3, 3, 2, 2, 2, 1, 1, 1, 1`, без перекрытий и соприкосновений |
+| Использование `view` после завершения хода | это снимок состояния, который не обновляется | сохраните нужные данные в `self` или используйте следующее представление |
+| Вывод в консоль при каждом выстреле | тысячи партий выполняются медленно | выводите текст только в коротком запуске |
 
-## Where to look next
 
-- [note.md](note.md#lab-stages) - game rules, the five lab stages and the 70% target.
-- [note.md](note.md#bot-api) - the full `Bot` and `PlayerView` reference.
-- [note.md](note.md#example-1-hunting-only-bot) - the complete hunting-only and placement-only teaching examples.
-- [README.md](README.md) - setup, requirements and the replay viewer.
+## Что читать дальше
+
+- [README.md](README.md) — настройка окружения, требования и средство просмотра повторов.
